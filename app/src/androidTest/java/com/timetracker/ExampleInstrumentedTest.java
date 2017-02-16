@@ -18,10 +18,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static org.junit.Assert.*;
@@ -45,29 +50,65 @@ public class ExampleInstrumentedTest {
     }
 
     @Test
-    public void useAppContext() throws Exception {
+    public void dailyStats() throws Exception {
         CategoryDao categoryDao = new CategoryDao(dbHelper);
         ActionDao actionDao = new ActionDao(dbHelper);
 
-        categoryDao.save(new Category.CreateCategory("testCategory"));
+        String testCategoryName = "testCategory";
+        categoryDao.save(new Category.CreateCategory(testCategoryName));
+        Category testCategory = categoryDao.list().filter((c) -> c.name.equals(testCategoryName)).findFirst().get();
 
         LocalDate today = new LocalDate(2017, 2, 2);
         LocalTime beginOfTime = new LocalTime(6, 0, 0);
 
         List<Action.CreateActionModel> actions = new ArrayList<>();
-        actions.add(new Action.CreateActionModel(PLAY, 1, localDTToDate(today, new LocalTime(3, 0, 0))));
-        actions.add(new Action.CreateActionModel(PAUSE, 1, localDTToDate(today, new LocalTime(9, 0, 0))));
-        actions.add(new Action.CreateActionModel(PLAY, 1, localDTToDate(today, new LocalTime(12, 0, 0))));
-        actions.add(new Action.CreateActionModel(PAUSE, 1, localDTToDate(today, new LocalTime(15, 0, 15))));
-        actions.add(new Action.CreateActionModel(PLAY, 1, localDTToDate(today.plusDays(1), new LocalTime(3, 0, 0))));
-        actions.add(new Action.CreateActionModel(PAUSE, 1, localDTToDate(today.plusDays(1), new LocalTime(4, 0, 0))));
+        actions.add(new Action.CreateActionModel(PLAY, testCategory.id, localDTToDate(today, new LocalTime(3, 0, 0))));
+        actions.add(new Action.CreateActionModel(PAUSE, testCategory.id, localDTToDate(today, new LocalTime(9, 0, 0))));
+        actions.add(new Action.CreateActionModel(PLAY, testCategory.id, localDTToDate(today, new LocalTime(12, 0, 0))));
+        actions.add(new Action.CreateActionModel(PAUSE, testCategory.id, localDTToDate(today, new LocalTime(15, 0, 15))));
+        actions.add(new Action.CreateActionModel(PLAY, testCategory.id, localDTToDate(today.plusDays(1), new LocalTime(3, 0, 0))));
+        actions.add(new Action.CreateActionModel(PAUSE, testCategory.id, localDTToDate(today.plusDays(1), new LocalTime(4, 0, 0))));
         try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
             for (Action.CreateActionModel action : actions) {
                 actionDao.save(db, action);
             }
         }
 
-        assertEquals(6*60*60*1000+15*1000+60*60*1000, actionDao.calcTodayLogged(today, beginOfTime, 1).longValue());
+        assertEquals(7*60*60*1000+15*1000, actionDao.calcTodayLogged(today, beginOfTime, testCategory.id).longValue());
+    }
+
+    @Test
+    public void weeklyStats() {
+        CategoryDao categoryDao = new CategoryDao(dbHelper);
+        ActionDao actionDao = new ActionDao(dbHelper);
+
+        String testCategoryName = "testCategory";
+        categoryDao.save(new Category.CreateCategory(testCategoryName));
+        Category testCategory = categoryDao.list().filter((c) -> c.name.equals(testCategoryName)).findFirst().get();
+
+        LocalTime beginOfTime = new LocalTime(6, 0, 0);
+
+        List<Action.CreateActionModel> actions = new ArrayList<>();
+        actions.add(new Action.CreateActionModel(PLAY, testCategory.id, localDTToDate(new LocalDate(2017, 2, 13), new LocalTime(3, 0, 0))));
+        actions.add(new Action.CreateActionModel(PAUSE, testCategory.id, localDTToDate(new LocalDate(2017, 2, 13), new LocalTime(9, 0, 0))));
+
+        actions.add(new Action.CreateActionModel(PLAY, testCategory.id, localDTToDate(new LocalDate(2017, 2, 14), new LocalTime(12, 0, 0))));
+        actions.add(new Action.CreateActionModel(PAUSE, testCategory.id, localDTToDate(new LocalDate(2017, 2, 14), new LocalTime(15, 0, 0))));
+
+        actions.add(new Action.CreateActionModel(PLAY, testCategory.id, localDTToDate(new LocalDate(2017, 2, 15), new LocalTime(14, 0, 0))));
+        actions.add(new Action.CreateActionModel(PAUSE, testCategory.id, localDTToDate(new LocalDate(2017, 2, 15), new LocalTime(15, 0, 0))));
+
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            for (Action.CreateActionModel action : actions) {
+                actionDao.save(db, action);
+            }
+        }
+
+        LocalDate wednesday = new LocalDate(2017, 2, 15);
+
+        List<Long> results = actionDao.calcCurrentWeekLogged(wednesday, beginOfTime, testCategory.id);
+
+        assertArrayEquals(new Long[]{3*60*60*1000l, 3*60*60*1000l, 60*60*1000l, 0l, 0l, 0l, 0l}, results.toArray());
 
     }
 

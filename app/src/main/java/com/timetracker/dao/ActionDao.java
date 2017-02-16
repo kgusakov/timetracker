@@ -22,6 +22,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static com.timetracker.db.ActionsContract.ActionEntry.*;
 
@@ -112,6 +115,12 @@ public class ActionDao {
         }
 
         return actions;
+    }
+
+    public List<Long> calcCurrentWeekLogged(LocalDate today, LocalTime beginOfDay, Integer categoryId) {
+        return IntStream.range(1, 8)
+                .mapToObj((i) -> calcTodayLogged(today.withDayOfWeek(i), beginOfDay, categoryId))
+                .collect(Collectors.toList());
     }
 
     public Long calcTodayLogged(LocalDate today, LocalTime beginOfDay, Integer categoryId) {

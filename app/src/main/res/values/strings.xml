@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">timetracker</string>
+    <string name="title_activity_daily_stats">DailyStats</string>
 </resources>
