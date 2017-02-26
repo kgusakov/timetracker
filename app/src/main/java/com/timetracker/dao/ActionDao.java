@@ -97,12 +97,13 @@ public class ActionDao {
         );
     }
 
-    public List<Action> todayActions(LocalDate today, LocalTime dayHours, Integer categoryId) {
+    public List<Action> todayActions(LocalDateTime today, LocalTime timeBeginOfDay, Integer categoryId) {
+        LocalDate realToday = realToday(today, timeBeginOfDay);
         LocalDateTime beginOfDay = new LocalDateTime(
-                today.getYear(),
-                today.getMonthOfYear(),
-                today.getDayOfMonth(),
-                dayHours.getHourOfDay(), dayHours.getMinuteOfHour(), dayHours.getSecondOfMinute());
+                realToday.getYear(),
+                realToday.getMonthOfYear(),
+                realToday.getDayOfMonth(),
+                timeBeginOfDay.getHourOfDay(), timeBeginOfDay.getMinuteOfHour(), timeBeginOfDay.getSecondOfMinute());
         LocalDateTime endOfDay = beginOfDay.plusHours(24);
 
         Cursor cursor = dbHelper.getReadableDatabase().rawQuery(
@@ -117,16 +118,19 @@ public class ActionDao {
         return actions;
     }
 
-    public List<Long> calcCurrentWeekLogged(LocalDate today, LocalTime beginOfDay, Integer categoryId) {
+    public List<Duration> calcCurrentWeekLogged(LocalDateTime today, LocalTime beginOfDay, Integer categoryId) {
+        LocalDate realToday = realToday(today, beginOfDay);
         return IntStream.range(1, 8)
-                .mapToObj((i) -> calcTodayLogged(today.withDayOfWeek(i), beginOfDay, categoryId))
+                .mapToObj((i) -> calcTodayLogged(realToday.toLocalDateTime(beginOfDay).withDayOfWeek(i), beginOfDay, categoryId))
+                .map(Duration::new)
                 .collect(Collectors.toList());
     }
 
-    public Long calcTodayLogged(LocalDate today, LocalTime beginOfDay, Integer categoryId) {
+    public Long calcTodayLogged(LocalDateTime today, LocalTime beginOfDay, Integer categoryId) {
         LinkedList<Action> actions = new LinkedList<>(todayActions(today, beginOfDay, categoryId));
+        LocalDate realToday = realToday(today, beginOfDay);
         LocalDateTime beginOfDayFullDate = new LocalDateTime(
-                today.getYear(), today.getMonthOfYear(), today.getDayOfMonth(),
+                realToday.getYear(), realToday.getMonthOfYear(), realToday.getDayOfMonth(),
                 beginOfDay.getHourOfDay(), beginOfDay.getMinuteOfHour(), beginOfDay.getSecondOfMinute()
                 );
         Optional<Action> lastActionBefore = lastActionBefore(beginOfDayFullDate.withHourOfDay(beginOfDay.getHourOfDay()));
@@ -173,5 +177,12 @@ public class ActionDao {
             return Optional.of(currentCursorStateToAction(cursor));
         else
             return Optional.empty();
+    }
+
+    private LocalDate realToday(LocalDateTime now, LocalTime beginOfDay) {
+        if (now.toLocalTime().compareTo(beginOfDay) < 0)
+            return now.toLocalDate().minusDays(1);
+        else
+            return now.toLocalDate();
     }
 }

@@ -1,6 +1,7 @@
 package com.timetracker;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -8,35 +9,24 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Chronometer;
-import android.widget.CursorAdapter;
-import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.timetracker.dao.ActionDao;
 import com.timetracker.dao.CategoryDao;
-import com.timetracker.db.CategoriesContract;
 import com.timetracker.db.DbHelper;
 import com.timetracker.entities.Action;
 import com.timetracker.entities.Category;
 
-import org.joda.time.Duration;
-import org.joda.time.Instant;
-import org.joda.time.Interval;
-import org.joda.time.LocalDate;
+import static com.timetracker.Constants.*;
+
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,8 +34,6 @@ public class MainActivity extends AppCompatActivity {
     private DbHelper dbHelper;
     private CategoryDao categoryDao;
     private ActionDao actionDao;
-
-    private Integer dayChangeHours = 6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +55,16 @@ public class MainActivity extends AppCompatActivity {
             if (actionDao.switchAction(item.id).equals(Action.ActionType.PAUSE))
                 chronometer.stop();
             else {
-                LocalTime beginOfDay = new LocalTime(6, 0);
-                LocalDate today = (beginOfDay.compareTo(new LocalTime()) == 1) ? new LocalDate().minusDays(1) : new LocalDate();
-                chronometer.setBase(SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(today, beginOfDay, item.id));
+                chronometer.setBase(SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, item.id));
                 chronometer.start();
             }
+        });
+        recordsList.setOnItemLongClickListener((parent, view, position, id) -> {
+            Category item = (Category) adapter.getItem(position);
+            Intent intent = new Intent(this, WeeklyStats.class);
+            intent.putExtra(WeeklyStats.CATEGORY_EXTRA_KEY, item);
+            startActivity(intent);
+            return true;
         });
     }
 
@@ -98,8 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
             Chronometer chronometer = (Chronometer) convertView.findViewById(R.id.category_chronometer);
             LocalTime beginOfDay = new LocalTime(6, 0);
-            LocalDate today = (beginOfDay.compareTo(new LocalTime()) == 1) ? new LocalDate().minusDays(1) : new LocalDate();
-            chronometer.setBase(SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(today, beginOfDay, getItem(position).id));
+            chronometer.setBase(SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), beginOfDay, getItem(position).id));
 
             textView.setText(getItem(position).name);
 

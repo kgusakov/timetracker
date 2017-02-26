@@ -11,6 +11,7 @@ import com.timetracker.db.DbHelper;
 import com.timetracker.entities.Action;
 import com.timetracker.entities.Category;
 
+import org.joda.time.Duration;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
@@ -74,7 +75,7 @@ public class ExampleInstrumentedTest {
             }
         }
 
-        assertEquals(7*60*60*1000+15*1000, actionDao.calcTodayLogged(today, beginOfTime, testCategory.id).longValue());
+        assertEquals(7*60*60*1000+15*1000, actionDao.calcTodayLogged(today.toLocalDateTime(beginOfTime), beginOfTime, testCategory.id).longValue());
     }
 
     @Test
@@ -106,10 +107,16 @@ public class ExampleInstrumentedTest {
 
         LocalDate wednesday = new LocalDate(2017, 2, 15);
 
-        List<Long> results = actionDao.calcCurrentWeekLogged(wednesday, beginOfTime, testCategory.id);
+        List<Duration> results = actionDao.calcCurrentWeekLogged(wednesday.toLocalDateTime(beginOfTime), beginOfTime, testCategory.id);
 
-        assertArrayEquals(new Long[]{3*60*60*1000l, 3*60*60*1000l, 60*60*1000l, 0l, 0l, 0l, 0l}, results.toArray());
-
+        assertArrayEquals(new Duration[]{
+                new Duration(3*60*60*1000l),
+                new Duration(3*60*60*1000l),
+                new Duration(60*60*1000l),
+                new Duration(0l),
+                new Duration(0l),
+                new Duration(0l),
+                new Duration(0l)}, results.toArray());
     }
 
     private LocalDateTime localDTToDate(LocalDate date, LocalTime time) {
