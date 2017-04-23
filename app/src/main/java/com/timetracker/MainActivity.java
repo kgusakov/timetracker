@@ -3,8 +3,10 @@ package com.timetracker;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -20,13 +22,19 @@ import android.widget.ListView;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
+import com.timetracker.broadcast.NotificationActionReceiver;
 import com.timetracker.dao.ActionDao;
 import com.timetracker.dao.CategoryDao;
 import com.timetracker.db.DbHelper;
 import com.timetracker.entities.Action;
 import com.timetracker.entities.Category;
 
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.timetracker.Constants.*;
+import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_CLOSE;
+import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_PAUSE;
+import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_PLAY;
+import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_STOP;
 
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
@@ -40,7 +48,11 @@ public class MainActivity extends AppCompatActivity {
     private CategoryDao categoryDao;
     private ActionDao actionDao;
 
-    private static int NOTIFICATION_ID = 1;
+    public static int NOTIFICATION_ID = 1;
+
+    public static String UPDATE_ACTION_BROADCAST = "com.timetracker.UPDATE";
+
+    private BroadcastReceiver notificationBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,52 +60,58 @@ public class MainActivity extends AppCompatActivity {
         init();
 
         setContentView(R.layout.activity_main);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        refresh();
+
+        notificationBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                refresh();
+            }
+        };
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(UPDATE_ACTION_BROADCAST);
+        getApplicationContext().registerReceiver(notificationBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getApplicationContext().unregisterReceiver(notificationBroadcastReceiver);
+    }
+
+    private void refresh() {
         ListView recordsList = (ListView) findViewById(R.id.records_list);
 
         ListAdapter adapter = new CategoryArrayAdapter(
                 getApplicationContext(),
                 android.R.layout.simple_list_item_1,
                 categoryDao.list().collect(Collectors.toList()));
+
         recordsList.setAdapter(adapter);
         recordsList.setOnItemClickListener((parent, view, position, id) -> {
             Category item = (Category) adapter.getItem(position);
             Chronometer chronometer = (Chronometer) view.findViewById(R.id.category_chronometer);
             if (actionDao.switchAction(item.id).equals(Action.ActionType.PAUSE)) {
-                long base = SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, item.id);
+
                 chronometer.stop();
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
-                        .setSmallIcon(android.R.drawable.stat_notify_voicemail)
-                        .setVisibility(Notification.VISIBILITY_PUBLIC);
-
-                RemoteViews mContentView = new RemoteViews(getPackageName(), R.layout.notification);
-                mContentView.setChronometer(R.id.notification_chronometer, base, chronometer.getFormat(), false);
-                mBuilder.setContent(mContentView);
-                mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_play, PendingIntent.getBroadcast(getApplicationContext(), )))
-
-                NotificationManager mNotificationManager =
-                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(NOTIFICATION_ID);
             }
             else {
                 long base = SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, item.id);
                 chronometer.setBase(base);
                 chronometer.start();
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
-                        .setSmallIcon(android.R.drawable.stat_notify_voicemail)
-                        .setVisibility(Notification.VISIBILITY_PUBLIC);
-
-                RemoteViews mContentView = new RemoteViews(getPackageName(), R.layout.notification);
-                mContentView.setTextViewText(R.id.notification_text_view, "Custom notification");
-                mContentView.setChronometer(R.id.notification_chronometer, base, chronometer.getFormat(), true);
-                mBuilder.setContent(mContentView);
-
-                NotificationManager mNotificationManager =
-                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
-                mNotificationManager.
+                sendNotification(getApplicationContext(),
+                        getPackageName(),
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE),
+                        true, item.id, actionDao);
             }
         });
         recordsList.setOnItemLongClickListener((parent, view, position, id) -> {
@@ -129,25 +147,46 @@ public class MainActivity extends AppCompatActivity {
             Chronometer chronometer = (Chronometer) convertView.findViewById(R.id.category_chronometer);
             LocalTime beginOfDay = new LocalTime(6, 0);
             chronometer.setBase(SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), beginOfDay, getItem(position).id));
-
+            if (actionDao.lastCategoryAction(getItem(position).id).map((action) -> action.type).orElse(Action.ActionType.PAUSE).equals(Action.ActionType.PLAY))
+                chronometer.start();
             textView.setText(getItem(position).name);
 
             return convertView;
         }
     }
 
-    public CategoryListItem of(Category category) {
-        return new CategoryListItem(category, new Chronometer(getApplicationContext()));
+    public static void sendNotification(Context context, String packageName,
+                                        NotificationManager notificationManager,
+                                        boolean chronometerStarted,
+                                        Integer categoryId, ActionDao actionDao) {
+        long base = SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, categoryId);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+                .setSmallIcon(android.R.drawable.stat_notify_voicemail)
+                .setVisibility(Notification.VISIBILITY_PUBLIC);
+
+        RemoteViews mContentView = new RemoteViews(packageName, R.layout.notification);
+        mContentView.setTextViewText(R.id.notification_text_view, "Custom notification");
+        mContentView.setChronometer(R.id.notification_chronometer, base, null, chronometerStarted);
+
+
+        if (chronometerStarted) {
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", pendingIntent(ACTION_PAUSE, categoryId, context)));
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_STOP, categoryId, context)));
+            mBuilder.setOngoing(true);
+        } else {
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_play, "Play", pendingIntent(ACTION_PLAY, categoryId, context)));
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_CLOSE, categoryId, context)));
+            mBuilder.setOngoing(false);
+        }
+
+        mBuilder.setContent(mContentView);
+        notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
-    public static class CategoryListItem {
-        public final Category category;
-        public final Chronometer chronometer;
-
-        public CategoryListItem(Category category, Chronometer chronometer) {
-            this.category = category;
-            this.chronometer = chronometer;
-        }
+    private static PendingIntent pendingIntent(String actionName, Integer categoryId, Context context) {
+        Intent intent = new Intent(actionName);
+        intent.putExtra(NotificationActionReceiver.CATEGORY_FIELD, categoryId);
+        return PendingIntent.getBroadcast(context, 1, intent, FLAG_UPDATE_CURRENT);
     }
 
 }

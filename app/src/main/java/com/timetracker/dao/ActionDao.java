@@ -63,6 +63,23 @@ public class ActionDao {
 
     }
 
+    public Action.ActionType switchAction(Integer categoryId, Action.ActionType actionType) {
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            db.beginTransaction();
+            Action.CreateActionModel newAction;
+            if (actionType.equals(Action.ActionType.PAUSE)) {
+                newAction = new Action.CreateActionModel(Action.ActionType.PAUSE, categoryId, new LocalDateTime());
+            } else {
+                newAction = new Action.CreateActionModel(Action.ActionType.PLAY, categoryId, new LocalDateTime());
+            }
+            save(db, newAction);
+            db.setTransactionSuccessful();
+            db.endTransaction();
+            return newAction.type;
+        }
+
+    }
+
     public Cursor findByCategoryIdCursor(Integer categoryId) {
         return dbHelper.getReadableDatabase()
                 .rawQuery(String.format("select * from %s where %s=%s",
@@ -184,5 +201,15 @@ public class ActionDao {
             return now.toLocalDate().minusDays(1);
         else
             return now.toLocalDate();
+    }
+
+    public Optional<Action> lastCategoryAction(Integer categoryId) {
+        Cursor cursor = dbHelper.getReadableDatabase().rawQuery(
+                String.format("select * from %s where %s = %s order by %s desc limit 1",
+                        TABLE_NAME, COLUMN_NAME_CATEGORY_ID, categoryId, COLUMN_NAME_DATE), null);
+        if (cursor.moveToNext())
+            return Optional.of(currentCursorStateToAction(cursor));
+        else
+            return Optional.empty();
     }
 }
