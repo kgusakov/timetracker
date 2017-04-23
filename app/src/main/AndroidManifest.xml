@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.timetracker">
 
     <application
@@ -20,17 +21,9 @@
             android:label="@string/title_activity_daily_stats"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <receiver
-            android:name=".broadcast.NotificationActionReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.timetracker.actions.PAUSE"/>
-                <action android:name="com.timetracker.actions.PLAY"/>
-                <action android:name="com.timetracker.actions.STOP"/>
-                <action android:name="com.timetracker.actions.CLOSE"/>
-            </intent-filter>
-        </receiver>
+        <service
+            android:name=".services.NotificationActionService"
+            android:exported="false"></service>
     </application>
 
 </manifest>

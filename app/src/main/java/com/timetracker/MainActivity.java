@@ -22,19 +22,19 @@ import android.widget.ListView;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
-import com.timetracker.broadcast.NotificationActionReceiver;
 import com.timetracker.dao.ActionDao;
 import com.timetracker.dao.CategoryDao;
 import com.timetracker.db.DbHelper;
 import com.timetracker.entities.Action;
 import com.timetracker.entities.Category;
+import com.timetracker.services.NotificationActionService;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.timetracker.Constants.*;
-import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_CLOSE;
-import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_PAUSE;
-import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_PLAY;
-import static com.timetracker.broadcast.NotificationActionReceiver.ACTION_STOP;
+import static com.timetracker.services.NotificationActionService.ACTION_CLOSE;
+import static com.timetracker.services.NotificationActionService.ACTION_PAUSE;
+import static com.timetracker.services.NotificationActionService.ACTION_PLAY;
+import static com.timetracker.services.NotificationActionService.ACTION_STOP;
 
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
@@ -168,14 +168,13 @@ public class MainActivity extends AppCompatActivity {
         mContentView.setTextViewText(R.id.notification_text_view, "Custom notification");
         mContentView.setChronometer(R.id.notification_chronometer, base, null, chronometerStarted);
 
-
         if (chronometerStarted) {
-            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", pendingIntent(ACTION_PAUSE, categoryId, context)));
-            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_STOP, categoryId, context)));
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", pendingIntent(ACTION_PAUSE, 0, categoryId, context)));
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_STOP, 1, categoryId, context)));
             mBuilder.setOngoing(true);
         } else {
-            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_play, "Play", pendingIntent(ACTION_PLAY, categoryId, context)));
-            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_CLOSE, categoryId, context)));
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_play, "Play", pendingIntent(ACTION_PLAY, 2, categoryId, context)));
+            mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_CLOSE, 3, categoryId, context)));
             mBuilder.setOngoing(false);
         }
 
@@ -183,10 +182,11 @@ public class MainActivity extends AppCompatActivity {
         notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
-    private static PendingIntent pendingIntent(String actionName, Integer categoryId, Context context) {
-        Intent intent = new Intent(actionName);
-        intent.putExtra(NotificationActionReceiver.CATEGORY_FIELD, categoryId);
-        return PendingIntent.getBroadcast(context, 1, intent, FLAG_UPDATE_CURRENT);
+    private static PendingIntent pendingIntent(String actionName, Integer requestCode, Integer categoryId, Context context) {
+        Intent intent = new Intent(context, NotificationActionService.class);
+        intent.putExtra(NotificationActionService.CATEGORY_FIELD, categoryId);
+        intent.putExtra(NotificationActionService.ACTION_NAME, actionName);
+        return PendingIntent.getService(context, requestCode + categoryId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
 }
