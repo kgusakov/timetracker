@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
@@ -76,13 +77,13 @@ public class MainActivity extends AppCompatActivity {
         };
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(UPDATE_ACTION_BROADCAST);
-        getApplicationContext().registerReceiver(notificationBroadcastReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(notificationBroadcastReceiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        getApplicationContext().unregisterReceiver(notificationBroadcastReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationBroadcastReceiver);
     }
 
     private void refresh() {

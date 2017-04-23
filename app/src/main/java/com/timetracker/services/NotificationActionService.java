@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.Context;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.timetracker.MainActivity;
 import com.timetracker.dao.ActionDao;
@@ -40,7 +41,7 @@ public class NotificationActionService extends IntentService {
                 MainActivity.sendNotification(this, this.getPackageName(),
                         (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE),
                         resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao);
-                this.sendBroadcast(updateIntent);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);
                 break;
             }
             case ACTION_PLAY: {
@@ -48,19 +49,18 @@ public class NotificationActionService extends IntentService {
                 MainActivity.sendNotification(this, this.getPackageName(),
                         (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE),
                         resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao);
-                this.sendBroadcast(updateIntent);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);
                 break;
             }
             case ACTION_STOP:
                 actionDao.switchAction(categoryId, Action.ActionType.PAUSE);
                 ((NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(MainActivity.NOTIFICATION_ID);
-                this.sendBroadcast(updateIntent);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);
                 break;
             case ACTION_CLOSE:
                 ((NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(MainActivity.NOTIFICATION_ID);
                 break;
 
         }
-        stopSelf();
     }
 }
