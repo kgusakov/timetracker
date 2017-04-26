@@ -1,14 +1,18 @@
 package com.timetracker;
 
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Chronometer;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RemoteViews;
@@ -28,6 +33,7 @@ import com.timetracker.dao.CategoryDao;
 import com.timetracker.db.DbHelper;
 import com.timetracker.entities.Action;
 import com.timetracker.entities.Category;
+import com.timetracker.fragments.CreateCategoryDialog;
 import com.timetracker.services.NotificationActionService;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
@@ -43,7 +49,7 @@ import org.joda.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CreateCategoryDialog.CreateCategoryDialogListener {
 
     private DbHelper dbHelper;
     private CategoryDao categoryDao;
@@ -61,6 +67,10 @@ public class MainActivity extends AppCompatActivity {
         init();
 
         setContentView(R.layout.activity_main);
+
+        ((FloatingActionButton) findViewById(R.id.add_category)).setOnClickListener(v -> {
+            new CreateCategoryDialog().show(getSupportFragmentManager(), "CreateCategoryDialog");
+        });
     }
 
     @Override
@@ -128,6 +138,14 @@ public class MainActivity extends AppCompatActivity {
         dbHelper = new DbHelper(getBaseContext());
         categoryDao = new CategoryDao(dbHelper);
         actionDao = new ActionDao(dbHelper);
+    }
+
+    @Override
+    public void onDialogPositiveClick(Dialog dialog) {
+        EditText categoryNameText = (EditText) dialog.findViewById(R.id.category_name);
+        categoryDao.save(new Category.CreateCategory(categoryNameText.getText().toString()));
+        refresh();
+        dialog.dismiss();
     }
 
     private class CategoryArrayAdapter extends ArrayAdapter<Category> {

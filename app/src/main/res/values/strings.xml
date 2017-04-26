@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">timetracker</string>
     <string name="title_activity_daily_stats">DailyStats</string>
+    <string name="category_name">Category name</string>
+    <string name="new_category">New category</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>
