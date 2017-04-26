@@ -8,6 +8,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.timetracker.MainActivity;
 import com.timetracker.dao.ActionDao;
+import com.timetracker.dao.CategoryDao;
 import com.timetracker.db.DbHelper;
 import com.timetracker.entities.Action;
 
@@ -30,7 +31,9 @@ public class NotificationActionService extends IntentService {
 
     @Override
     public void onHandleIntent(Intent intent) {
-        ActionDao actionDao = new ActionDao(new DbHelper(this));
+        DbHelper dbHelper = new DbHelper(this);
+        ActionDao actionDao = new ActionDao(dbHelper);
+        CategoryDao categoryDao = new CategoryDao(dbHelper);
         Integer categoryId = intent.getIntExtra(CATEGORY_FIELD, -1);
 
         Intent updateIntent = new Intent(MainActivity.UPDATE_ACTION_BROADCAST);
@@ -38,9 +41,10 @@ public class NotificationActionService extends IntentService {
         switch (intent.getStringExtra(ACTION_NAME)) {
             case ACTION_PAUSE: {
                 Action.ActionType resultActionType = actionDao.switchAction(categoryId, Action.ActionType.PAUSE);
+
                 MainActivity.sendNotification(this, this.getPackageName(),
                         (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE),
-                        resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao);
+                        resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao, categoryDao);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);
                 break;
             }
@@ -48,7 +52,7 @@ public class NotificationActionService extends IntentService {
                 Action.ActionType resultActionType = actionDao.switchAction(categoryId, Action.ActionType.PLAY);
                 MainActivity.sendNotification(this, this.getPackageName(),
                         (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE),
-                        resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao);
+                        resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao, categoryDao);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);
                 break;
             }

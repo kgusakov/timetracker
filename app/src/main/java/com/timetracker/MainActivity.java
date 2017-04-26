@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements CreateCategoryDia
                 sendNotification(getApplicationContext(),
                         getPackageName(),
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE),
-                        true, item.id, actionDao);
+                        true, item.id, actionDao, categoryDao);
             }
         });
         recordsList.setOnItemLongClickListener((parent, view, position, id) -> {
@@ -177,14 +177,14 @@ public class MainActivity extends AppCompatActivity implements CreateCategoryDia
     public static void sendNotification(Context context, String packageName,
                                         NotificationManager notificationManager,
                                         boolean chronometerStarted,
-                                        Integer categoryId, ActionDao actionDao) {
+                                        Integer categoryId, ActionDao actionDao, CategoryDao categoryDao) {
         long base = SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, categoryId);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(android.R.drawable.stat_notify_voicemail)
                 .setVisibility(Notification.VISIBILITY_PUBLIC);
 
         RemoteViews mContentView = new RemoteViews(packageName, R.layout.notification);
-        mContentView.setTextViewText(R.id.notification_text_view, "Custom notification");
+        mContentView.setTextViewText(R.id.notification_text_view, categoryDao.findById(categoryId).map((c) -> c.name).orElse(""));
         mContentView.setChronometer(R.id.notification_chronometer, base, null, chronometerStarted);
 
         if (chronometerStarted) {
