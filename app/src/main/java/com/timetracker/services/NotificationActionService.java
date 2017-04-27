@@ -42,7 +42,7 @@ public class NotificationActionService extends IntentService {
             case ACTION_PAUSE: {
                 Action.ActionType resultActionType = actionDao.switchAction(categoryId, Action.ActionType.PAUSE);
 
-                MainActivity.sendNotification(this, this.getPackageName(),
+                MainActivity.sendNotification(this,
                         (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE),
                         resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao, categoryDao);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);
@@ -50,7 +50,7 @@ public class NotificationActionService extends IntentService {
             }
             case ACTION_PLAY: {
                 Action.ActionType resultActionType = actionDao.switchAction(categoryId, Action.ActionType.PLAY);
-                MainActivity.sendNotification(this, this.getPackageName(),
+                MainActivity.sendNotification(this,
                         (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE),
                         resultActionType.equals(Action.ActionType.PLAY), categoryId, actionDao, categoryDao);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent);

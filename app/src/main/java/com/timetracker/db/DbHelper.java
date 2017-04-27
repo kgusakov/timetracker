@@ -1,14 +1,10 @@
 package com.timetracker.db;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.timetracker.db.ActionsContract.ActionEntry;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class DbHelper extends SQLiteOpenHelper {
 
@@ -23,11 +19,6 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_ACTIONS);
         db.execSQL(SQL_CREATE_CATEGORIES);
-        for (String category: CATEGORIES) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(CategoriesContract.CategoryEntry.COLUMN_NAME_NAME, category);
-            db.insert(CategoriesContract.CategoryEntry.TABLE_NAME, null, contentValues);
-        }
     }
 
     @Override
@@ -47,5 +38,4 @@ public class DbHelper extends SQLiteOpenHelper {
                     CategoriesContract.CategoryEntry._ID + " INTEGER PRIMARY KEY," +
                     CategoriesContract.CategoryEntry.COLUMN_NAME_NAME + " TEXT)";
 
-    private static final List<String> CATEGORIES = Arrays.asList("technical reading", "ukulele");
 }

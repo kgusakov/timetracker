@@ -6,17 +6,15 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.NotificationCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +23,6 @@ import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 
 import com.timetracker.dao.ActionDao;
@@ -36,7 +33,6 @@ import com.timetracker.entities.Category;
 import com.timetracker.fragments.CreateCategoryDialog;
 import com.timetracker.services.NotificationActionService;
 
-import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.timetracker.Constants.*;
 import static com.timetracker.services.NotificationActionService.ACTION_CLOSE;
 import static com.timetracker.services.NotificationActionService.ACTION_PAUSE;
@@ -120,7 +116,6 @@ public class MainActivity extends AppCompatActivity implements CreateCategoryDia
                 chronometer.start();
 
                 sendNotification(getApplicationContext(),
-                        getPackageName(),
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE),
                         true, item.id, actionDao, categoryDao);
             }
@@ -174,30 +169,34 @@ public class MainActivity extends AppCompatActivity implements CreateCategoryDia
         }
     }
 
-    public static void sendNotification(Context context, String packageName,
+    public static void sendNotification(Context context,
                                         NotificationManager notificationManager,
                                         boolean chronometerStarted,
                                         Integer categoryId, ActionDao actionDao, CategoryDao categoryDao) {
-        long base = SystemClock.elapsedRealtime() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, categoryId);
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+        long base = System.currentTimeMillis() - actionDao.calcTodayLogged(new LocalDateTime(), BEGIN_OF_DAY, categoryId);
+        NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
                 .setSmallIcon(android.R.drawable.stat_notify_voicemail)
                 .setVisibility(Notification.VISIBILITY_PUBLIC);
 
-        RemoteViews mContentView = new RemoteViews(packageName, R.layout.notification);
-        mContentView.setTextViewText(R.id.notification_text_view, categoryDao.findById(categoryId).map((c) -> c.name).orElse(""));
-        mContentView.setChronometer(R.id.notification_chronometer, base, null, chronometerStarted);
+        mBuilder.setWhen(base);
+
+        categoryDao.findById(categoryId).map((c) -> c.name).ifPresent(mBuilder::setContentText);
 
         if (chronometerStarted) {
             mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", pendingIntent(ACTION_PAUSE, 0, categoryId, context)));
             mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_STOP, 1, categoryId, context)));
             mBuilder.setOngoing(true);
+            mBuilder.setUsesChronometer(true);
         } else {
             mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_play, "Play", pendingIntent(ACTION_PLAY, 2, categoryId, context)));
             mBuilder.addAction(new NotificationCompat.Action(android.R.drawable.ic_delete, "Finish", pendingIntent(ACTION_CLOSE, 3, categoryId, context)));
             mBuilder.setOngoing(false);
+            mBuilder.setShowWhen(false);
         }
 
-        mBuilder.setContent(mContentView);
+        mBuilder.setStyle(new NotificationCompat.MediaStyle()
+                .setShowActionsInCompactView(0, 1));
+
         notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
