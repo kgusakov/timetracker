@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
         recordsList = findViewById(R.id.records_list) as ListView
 
         val adapter = CategoryArrayAdapter(
-                applicationContext,
+                this,
                 android.R.layout.simple_list_item_1,
                 categoryDao!!.list())
 

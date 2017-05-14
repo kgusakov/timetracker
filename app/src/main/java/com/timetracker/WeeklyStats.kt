@@ -51,7 +51,7 @@ class WeeklyStats : AppCompatActivity() {
                 .calcCurrentWeekLogged(LocalDateTime(), BEGIN_OF_DAY, category.id)
                 .map { d -> weekDaysIterator.next() + ": " + formatter.print(d.toPeriod()) }
         val adapter = ArrayAdapter<String>(
-                applicationContext,
+                this,
                 android.R.layout.simple_list_item_1,
                 durations
         )
