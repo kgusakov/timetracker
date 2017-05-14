@@ -1,16 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants">
 
-    <TextView
-        android:id="@+id/category_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_gravity="start"
+        android:layout_weight="1"
+        android:layout_width="wrap_content"
+        android:layout_height="64dp">
 
-    <Chronometer
-        android:id="@+id/category_chronometer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        <TextView
+            android:id="@+id/category_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
+        <Chronometer
+            android:id="@+id/category_chronometer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+    <ImageButton
+        android:id="@+id/item_menu_button"
+        android:layout_gravity="end|center_vertical"
+        android:layout_width="48dp"
+        android:layout_height="match_parent"
+        android:background="@null"
+        android:src="@drawable/ic_more_vert_black_24px" />
 </LinearLayout>

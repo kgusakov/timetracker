@@ -14,14 +14,8 @@ import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.NotificationCompat
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.Chronometer
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.TextView
+import android.view.*
+import android.widget.*
 
 import com.timetracker.dao.ActionDao
 import com.timetracker.dao.CategoryDao
@@ -47,6 +41,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
     private var categoryDao: CategoryDao? = null
     private var actionDao: ActionDao? = null
 
+    private var recordsList: ListView? = null
     private var notificationBroadcastReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,15 +74,15 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
     }
 
     private fun refresh() {
-        val recordsList = findViewById(R.id.records_list) as ListView
+        recordsList = findViewById(R.id.records_list) as ListView
 
         val adapter = CategoryArrayAdapter(
                 applicationContext,
                 android.R.layout.simple_list_item_1,
                 categoryDao!!.list())
 
-        recordsList.adapter = adapter
-        recordsList.setOnItemClickListener { parent, view, position, id ->
+        recordsList!!.adapter = adapter
+        recordsList!!.setOnItemClickListener { parent, view, position, id ->
             val item = adapter.getItem(position)
             val chronometer = view.findViewById(R.id.category_chronometer) as Chronometer
             if (actionDao!!.switchAction(item.id) == Action.ActionType.PAUSE) {
@@ -105,12 +100,12 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
                         true, item.id, actionDao!!, categoryDao!!)
             }
         }
-        recordsList.setOnItemLongClickListener { parent, view, position, id ->
-            val intent = Intent(this, WeeklyStats::class.java)
-            intent.putExtra(WeeklyStats.CATEGORY_EXTRA_KEY, adapter.getItem(position))
-            startActivity(intent)
-            true
-        }
+    }
+
+    private fun showStats(category: Category) {
+        val intent = Intent(this, WeeklyStats::class.java)
+        intent.putExtra(WeeklyStats.CATEGORY_EXTRA_KEY, category)
+        startActivity(intent)
     }
 
     private fun init() {
@@ -119,11 +114,48 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
         actionDao = ActionDao(dbHelper!!)
     }
 
+    private fun showPopupMenu(category: Category, view: View) {
+        val popup = PopupMenu(this, view)
+
+        // This activity implements OnMenuItemClickListener
+        popup.setOnMenuItemClickListener { item ->
+            itemMenuClickListener(item, category)
+        }
+        popup.inflate(R.menu.item_menu)
+        popup.show()
+    }
+
     override fun onDialogPositiveClick(dialog: Dialog) {
         val categoryNameText = dialog.findViewById(R.id.category_name) as EditText
         categoryDao!!.save(Category.CreateCategory(categoryNameText.text.toString()))
         refresh()
         dialog.dismiss()
+    }
+
+    override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        val inflater = menuInflater!!
+        inflater.inflate(R.menu.item_menu, menu)
+    }
+
+    fun itemMenuClickListener(item: MenuItem, category: Category): Boolean {
+        return when (item.itemId) {
+            R.id.stats_category -> {
+                showStats(category)
+                true
+            }
+            R.id.edit_category -> {
+                Toast.makeText(applicationContext, "Edit clicked on " + category.name, Toast.LENGTH_SHORT).show()
+                true
+            }
+            R.id.delete_category -> {
+                Toast.makeText(applicationContext, "Delete clicked " + category.name, Toast.LENGTH_SHORT).show()
+                true
+            }
+            else -> {
+                super.onContextItemSelected(item)
+            }
+        }
     }
 
     private inner class CategoryArrayAdapter(context: Context, resource: Int, objects: List<Category>) : ArrayAdapter<Category>(context, resource, objects) {
@@ -142,6 +174,11 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
             if ((actionDao!!.lastCategoryAction(getItem(position)!!.id)?.type ?: (Action.ActionType.PAUSE)).equals(Action.ActionType.PLAY))
                 chronometer.start()
             textView.text = getItem(position)!!.name
+
+            val itemMenuButton = convertView.findViewById(R.id.item_menu_button) as ImageButton
+            itemMenuButton.setOnClickListener { v ->
+                showPopupMenu(getItem(position)!!, v)
+            }
 
             return convertView
         }

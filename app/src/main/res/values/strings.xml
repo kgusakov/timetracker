@@ -5,4 +5,7 @@
     <string name="new_category">New category</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="menu_item_edit">Edit</string>
+    <string name="menu_item_delete">Delete</string>
+    <string name="menu_item_stats">Stats</string>
 </resources>
