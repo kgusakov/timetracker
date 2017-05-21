@@ -8,9 +8,8 @@ import android.provider.BaseColumns
 import com.timetracker.db.CategoriesContract
 import com.timetracker.entities.Category
 
-import java.util.ArrayList
-
 import com.timetracker.db.CategoriesContract.CategoryEntry.*
+import java.util.*
 
 class CategoryDao(private val dbHelper: SQLiteOpenHelper) {
 
@@ -55,6 +54,12 @@ class CategoryDao(private val dbHelper: SQLiteOpenHelper) {
             return currentCursorStateToCategory(cursor)
         else
             return null
+    }
+
+    fun delete(categoryId: Int) {
+        dbHelper.writableDatabase.use { db ->
+            db.delete(TABLE_NAME, "${BaseColumns._ID} = $categoryId", null)
+        }
     }
 
     private fun currentCursorStateToCategory(cursor: Cursor): Category {

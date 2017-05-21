@@ -149,6 +149,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
                 true
             }
             R.id.delete_category -> {
+                deleteCategory(category.id)
                 Toast.makeText(applicationContext, "Delete clicked " + category.name, Toast.LENGTH_SHORT).show()
                 true
             }
@@ -156,6 +157,11 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
                 super.onContextItemSelected(item)
             }
         }
+    }
+
+    private fun deleteCategory(categoryId: Int) {
+        categoryDao!!.delete(categoryId)
+        refresh()
     }
 
     private inner class CategoryArrayAdapter(context: Context, resource: Int, objects: List<Category>) : ArrayAdapter<Category>(context, resource, objects) {

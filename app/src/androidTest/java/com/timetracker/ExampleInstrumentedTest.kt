@@ -104,6 +104,15 @@ class ExampleInstrumentedTest {
         assertArrayEquals(arrayOf(Duration(3 * 60 * 60 * 1000L), Duration(3 * 60 * 60 * 1000L), Duration(60 * 60 * 1000L), Duration(0L), Duration(0L), Duration(0L), Duration(0L)), results.toTypedArray())
     }
 
+    @Test
+    fun categoryDelete() {
+        val categoryDao = CategoryDao(dbHelper!!)
+        categoryDao.save(Category.CreateCategory("newcategory"))
+        val category = categoryDao.findById(1)!!
+        categoryDao.delete(category.id)
+        assertEquals(null, categoryDao.findById(category.id))
+    }
+
     private fun localDTToDate(date: LocalDate, time: LocalTime): LocalDateTime {
         return LocalDateTime(
                 date.year,
