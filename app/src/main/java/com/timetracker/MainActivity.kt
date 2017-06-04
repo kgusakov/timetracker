@@ -26,6 +26,7 @@ import com.timetracker.fragments.CreateCategoryDialog
 import com.timetracker.services.NotificationActionService
 
 import com.timetracker.Constants.*
+import com.timetracker.fragments.DeleteCategoryDialog
 import com.timetracker.services.NotificationActionService.ACTION_CLOSE
 import com.timetracker.services.NotificationActionService.ACTION_PAUSE
 import com.timetracker.services.NotificationActionService.ACTION_PLAY
@@ -33,7 +34,6 @@ import com.timetracker.services.NotificationActionService.ACTION_STOP
 
 import org.joda.time.LocalDateTime
 import org.joda.time.LocalTime
-import java.util.stream.Collectors
 
 class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDialogListener {
 
@@ -149,8 +149,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
                 true
             }
             R.id.delete_category -> {
-                deleteCategory(category.id)
-                Toast.makeText(applicationContext, "Delete clicked " + category.name, Toast.LENGTH_SHORT).show()
+                deleteCategory(category.name, category.id)
                 true
             }
             else -> {
@@ -159,9 +158,12 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
         }
     }
 
-    private fun deleteCategory(categoryId: Int) {
-        categoryDao!!.delete(categoryId)
-        refresh()
+    private fun deleteCategory(categoryName: String, categoryId: Int) {
+        DeleteCategoryDialog(categoryName, categoryId) { cId ->
+            categoryDao!!.delete(cId)
+            refresh()
+            Toast.makeText(applicationContext, "Category '$categoryName' was deleted" , Toast.LENGTH_SHORT).show()
+        }.show(supportFragmentManager, DeleteCategoryDialog::javaClass.name)
     }
 
     private inner class CategoryArrayAdapter(context: Context, resource: Int, objects: List<Category>) : ArrayAdapter<Category>(context, resource, objects) {

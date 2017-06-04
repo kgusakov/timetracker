@@ -8,4 +8,6 @@
     <string name="menu_item_edit">Edit</string>
     <string name="menu_item_delete">Delete</string>
     <string name="menu_item_stats">Stats</string>
+    <string name="delete">Delete</string>
+    <string name="delete_message">Do you really want to delete category?</string>
 </resources>
