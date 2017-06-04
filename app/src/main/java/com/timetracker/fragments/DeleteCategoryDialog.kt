@@ -13,9 +13,9 @@ class DeleteCategoryDialog(val categoryName: String, val categoryId: Int, val di
         builder.setTitle(categoryName)
         builder.setMessage(R.string.delete_message)
 
-        builder.setPositiveButton(R.string.delete) { dialog, _ ->
+        builder.setPositiveButton(R.string.delete) { _, _ ->
             dialogListener(categoryId)
-            dialog.dismiss()
+            dismiss()
         }
 
         builder.setNegativeButton(R.string.cancel, {dialog, _ -> dialog.dismiss()})

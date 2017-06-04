@@ -35,7 +35,7 @@ import com.timetracker.services.NotificationActionService.ACTION_STOP
 import org.joda.time.LocalDateTime
 import org.joda.time.LocalTime
 
-class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDialogListener {
+class MainActivity : AppCompatActivity() {
 
     private var dbHelper: DbHelper? = null
     private var categoryDao: CategoryDao? = null
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
 
         setContentView(R.layout.activity_main)
 
-        (findViewById(R.id.add_category) as FloatingActionButton).setOnClickListener { v -> CreateCategoryDialog().show(supportFragmentManager, "CreateCategoryDialog") }
+        (findViewById(R.id.add_category) as FloatingActionButton).setOnClickListener { _ -> createCategoryDialog() }
     }
 
     override fun onResume() {
@@ -125,11 +125,11 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
         popup.show()
     }
 
-    override fun onDialogPositiveClick(dialog: Dialog) {
-        val categoryNameText = dialog.findViewById(R.id.category_name) as EditText
-        categoryDao!!.save(Category.CreateCategory(categoryNameText.text.toString()))
-        refresh()
-        dialog.dismiss()
+    private fun createCategoryDialog() {
+        CreateCategoryDialog { categoryName ->
+            categoryDao!!.save(Category.CreateCategory(categoryName))
+            refresh()
+        }.show(supportFragmentManager, CreateCategoryDialog::javaClass.name)
     }
 
     override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
                 true
             }
             R.id.delete_category -> {
-                deleteCategory(category.name, category.id)
+                deleteCategoryDialog(category.name, category.id)
                 true
             }
             else -> {
@@ -158,7 +158,7 @@ class MainActivity : AppCompatActivity(), CreateCategoryDialog.CreateCategoryDia
         }
     }
 
-    private fun deleteCategory(categoryName: String, categoryId: Int) {
+    private fun deleteCategoryDialog(categoryName: String, categoryId: Int) {
         DeleteCategoryDialog(categoryName, categoryId) { cId ->
             categoryDao!!.delete(cId)
             refresh()
