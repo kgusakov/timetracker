@@ -1,6 +1,5 @@
-package com.timetracker
+package com.timetracker.activities
 
-import android.app.Dialog
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -25,7 +24,8 @@ import com.timetracker.entities.Category
 import com.timetracker.fragments.CreateCategoryDialog
 import com.timetracker.services.NotificationActionService
 
-import com.timetracker.Constants.*
+import com.timetracker.utils.Constants.*
+import com.timetracker.R
 import com.timetracker.fragments.DeleteCategoryDialog
 import com.timetracker.services.NotificationActionService.ACTION_CLOSE
 import com.timetracker.services.NotificationActionService.ACTION_PAUSE

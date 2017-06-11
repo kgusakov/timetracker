@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.Context;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.timetracker.MainActivity;
+import com.timetracker.activities.MainActivity;
 import com.timetracker.dao.ActionDao;
 import com.timetracker.dao.CategoryDao;
 import com.timetracker.db.DbHelper;

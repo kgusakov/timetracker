@@ -1,4 +1,4 @@
-package com.timetracker;
+package com.timetracker.utils;
 
 import org.joda.time.LocalTime;
 

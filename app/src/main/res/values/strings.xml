@@ -10,4 +10,5 @@
     <string name="menu_item_stats">Stats</string>
     <string name="delete">Delete</string>
     <string name="delete_message">Do you really want to delete category?</string>
+    <string name="title_activity_goals">Goals</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.timetracker
+package com.timetracker.activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -10,7 +10,8 @@ import com.timetracker.dao.CategoryDao
 import com.timetracker.db.DbHelper
 import com.timetracker.entities.Category
 
-import com.timetracker.Constants.*
+import com.timetracker.utils.Constants.*
+import com.timetracker.R
 
 import org.joda.time.LocalDateTime
 import org.joda.time.format.PeriodFormatterBuilder

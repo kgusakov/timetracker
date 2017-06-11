@@ -9,7 +9,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -17,13 +17,18 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".WeeklyStats"
+            android:name=".activities.WeeklyStats"
             android:label="@string/title_activity_daily_stats"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <service
             android:name=".services.NotificationActionService"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <activity
+            android:name=".activities.Goals"
+            android:label="@string/title_activity_goals"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

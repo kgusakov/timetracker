@@ -17,16 +17,16 @@ import java.util.Date
 import java.util.HashSet
 import java.util.LinkedList
 
-import com.timetracker.db.ActionsContract.ActionEntry.*
+import com.timetracker.db.entries.ActionEntry as AE
 
 class ActionDao(private val dbHelper: SQLiteOpenHelper) {
 
     fun save(db: SQLiteDatabase, action: Action.CreateActionModel) {
         val contentValues = ContentValues()
-        contentValues.put(COLUMN_NAME_CATEGORY_ID, action.categoryId)
-        contentValues.put(COLUMN_NAME_DATE, action.date.toDate().time)
-        contentValues.put(COLUMN_NAME_TYPE, action.type.name)
-        db.insert(TABLE_NAME, null, contentValues)
+        contentValues.put(AE.COLUMN_NAME_CATEGORY_ID, action.categoryId)
+        contentValues.put(AE.COLUMN_NAME_DATE, action.date.toDate().time)
+        contentValues.put(AE.COLUMN_NAME_TYPE, action.type.name)
+        db.insert(AE.TABLE_NAME, null, contentValues)
     }
 
     fun switchAction(categoryId: Int?): Action.ActionType {
@@ -67,7 +67,7 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
     fun findByCategoryIdCursor(categoryId: Int?): Cursor {
         return dbHelper.readableDatabase
                 .rawQuery(String.format("select * from %s where %s=%s",
-                        TABLE_NAME, COLUMN_NAME_CATEGORY_ID, categoryId), null)
+                        AE.TABLE_NAME, AE.COLUMN_NAME_CATEGORY_ID, categoryId), null)
     }
 
     fun findByCategoryId(categoryId: Int?): Set<Action> {
@@ -82,7 +82,7 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
     private fun lastCategoryAction(db: SQLiteDatabase, categoryId: Int?): Action? {
         val cursor = db.rawQuery(
                 String.format("select * from %s where %s=%s order by %s desc limit 1",
-                        TABLE_NAME, COLUMN_NAME_CATEGORY_ID, categoryId, COLUMN_NAME_DATE), null)
+                        AE.TABLE_NAME, AE.COLUMN_NAME_CATEGORY_ID, categoryId, AE.COLUMN_NAME_DATE), null)
         val action: Action?
         if (cursor.moveToNext())
             action = currentCursorStateToAction(cursor)
@@ -94,9 +94,9 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
     private fun currentCursorStateToAction(cursor: Cursor): Action {
         return Action(
                 cursor.getInt(cursor.getColumnIndex(BaseColumns._ID)),
-                Action.ActionType.valueOf(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE))),
-                cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_CATEGORY_ID)),
-                Date(cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_DATE)))
+                Action.ActionType.valueOf(cursor.getString(cursor.getColumnIndex(AE.COLUMN_NAME_TYPE))),
+                cursor.getInt(cursor.getColumnIndex(AE.COLUMN_NAME_CATEGORY_ID)),
+                Date(cursor.getLong(cursor.getColumnIndex(AE.COLUMN_NAME_DATE)))
         )
     }
 
@@ -111,8 +111,8 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
 
         val cursor = dbHelper.readableDatabase.rawQuery(
                 String.format("select * from %s where %s >= %s and %s < %s and %s=%s order by %s",
-                        TABLE_NAME, COLUMN_NAME_DATE, beginOfDay.toDate().time,
-                        COLUMN_NAME_DATE, endOfDay.toDate().time, COLUMN_NAME_CATEGORY_ID, categoryId, COLUMN_NAME_DATE), null)
+                        AE.TABLE_NAME, AE.COLUMN_NAME_DATE, beginOfDay.toDate().time,
+                        AE.COLUMN_NAME_DATE, endOfDay.toDate().time, AE.COLUMN_NAME_CATEGORY_ID, categoryId, AE.COLUMN_NAME_DATE), null)
         val actions = LinkedList<Action>()
         while (cursor.moveToNext()) {
             actions.add(currentCursorStateToAction(cursor))
@@ -162,7 +162,7 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
     fun lastActionBefore(time: LocalDateTime): Action? {
         val cursor = dbHelper.readableDatabase.rawQuery(
                 String.format("select * from %s where %s < %s order by %s desc limit 1",
-                        TABLE_NAME, COLUMN_NAME_DATE, time.toDate().time, COLUMN_NAME_DATE), null)
+                        AE.TABLE_NAME, AE.COLUMN_NAME_DATE, time.toDate().time, AE.COLUMN_NAME_DATE), null)
         if (cursor.moveToNext())
             return currentCursorStateToAction(cursor)
         else
@@ -172,7 +172,7 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
     private fun firstActionAfter(time: LocalDateTime): Action? {
         val cursor = dbHelper.readableDatabase.rawQuery(
                 String.format("select * from %s where %s >= %s order by %s limit 1",
-                        TABLE_NAME, COLUMN_NAME_DATE, time.toDate().time, COLUMN_NAME_DATE), null)
+                        AE.TABLE_NAME, AE.COLUMN_NAME_DATE, time.toDate().time, AE.COLUMN_NAME_DATE), null)
         if (cursor.moveToNext())
             return currentCursorStateToAction(cursor)
         else
@@ -189,7 +189,7 @@ class ActionDao(private val dbHelper: SQLiteOpenHelper) {
     fun lastCategoryAction(categoryId: Int?): Action? {
         val cursor = dbHelper.readableDatabase.rawQuery(
                 String.format("select * from %s where %s = %s order by %s desc limit 1",
-                        TABLE_NAME, COLUMN_NAME_CATEGORY_ID, categoryId, COLUMN_NAME_DATE), null)
+                        AE.TABLE_NAME, AE.COLUMN_NAME_CATEGORY_ID, categoryId, AE.COLUMN_NAME_DATE), null)
         if (cursor.moveToNext())
             return currentCursorStateToAction(cursor)
         else

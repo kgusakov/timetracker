@@ -4,7 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.timetracker.db.ActionsContract.ActionEntry;
+import com.timetracker.db.entries.*;
 
 public class DbHelper extends SQLiteOpenHelper {
 
@@ -34,8 +34,8 @@ public class DbHelper extends SQLiteOpenHelper {
                     ActionEntry.COLUMN_NAME_CATEGORY_ID + " INTEGER)";
 
     private static final String SQL_CREATE_CATEGORIES =
-            "CREATE TABLE " + CategoriesContract.CategoryEntry.TABLE_NAME + " (" +
-                    CategoriesContract.CategoryEntry._ID + " INTEGER PRIMARY KEY," +
-                    CategoriesContract.CategoryEntry.COLUMN_NAME_NAME + " TEXT)";
+            "CREATE TABLE " + CategoryEntry.TABLE_NAME + " (" +
+                    CategoryEntry._ID + " INTEGER PRIMARY KEY," +
+                    CategoryEntry.COLUMN_NAME_NAME + " TEXT)";
 
 }
