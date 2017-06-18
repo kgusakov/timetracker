@@ -24,11 +24,6 @@
         <service
             android:name=".services.NotificationActionService"
             android:exported="false" />
-
-        <activity
-            android:name=".activities.Goals"
-            android:label="@string/title_activity_goals"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
