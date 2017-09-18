@@ -25,13 +25,21 @@ enum class DayOfWeek {
             else throw IllegalArgumentException("Day of th week should be > 0 and < 8")
 
         fun toJodaInt(day: DayOfWeek) = {
-            val filteredMap = intsToDays.filterValues { it == day }.values.first()
+            intsToDays.filterValues { it == day }.values.first()
         }
     }
 }
 
 sealed class GoalType {
-    class Weekly : GoalType()
-    class Monthly : GoalType()
-    class Daily(days: Set<DayOfWeek>) : GoalType()
+    object Weekly: GoalType()
+    object Monthly: GoalType()
+    object Daily(days: Set<DayOfWeek>): GoalType()
 }
+/*
+every day 10 min each
+every week 3 days 40 min each
+every week 20h each
+every day 3 times 10 min each
+
+<every> <week>|<day> [<N> <days>|<times>] <N> <hours>|<mins>
+ */
